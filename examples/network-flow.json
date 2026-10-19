@@ -1,0 +1,15 @@
+[{
+  "id":"DEMO-NET-01", "subject":"Verifica flussi pagamenti su firewall",
+  "description":"Caso sintetico: autorizzazioni per un nuovo dispositivo.",
+  "status":"Assegnato", "priority":"Media", "assigned_to":"Tecnico demo",
+  "site_id":"DEMO-SITE", "asset_id":"DEMO-ASSET",
+  "technical":{
+    "playbook_id":"network-flow",
+    "facts":{
+      "problem":{"value":"Validare il nuovo flusso verso il servizio pagamenti","source":"Richiesta demo","kind":"reported"},
+      "classification":{"value":"Service Request","source":"Scheda demo","kind":"reported"}
+    },
+    "evidence":[{"value":"Oggetto aggiunto alle policy secondo il richiedente","source":"Richiesta demo","kind":"reported"}],
+    "checks":{}
+  }
+}]

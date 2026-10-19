@@ -1,6 +1,6 @@
 # Triage
 
-Assistente locale per il triage del service desk, derivato dall'analisi del portale Helpdesk Advanced. Prima versione **advisory**, eseguibile senza AI e senza dipendenze Python esterne. Non è ancora un connettore al portale né un sistema pronto per produzione.
+Assistente locale per il triage del service desk, derivato dall'analisi del portale Helpdesk Advanced. Prima versione **advisory**, sviluppata senza AI e senza dipendenze Python esterne. Non è ancora un connettore al portale né un sistema pronto per produzione.
 
 ## Avvio (Python 3.12)
 
@@ -8,6 +8,7 @@ Assistente locale per il triage del service desk, derivato dall'analisi del port
 python -m triage.server
 # Aprire http://127.0.0.1:8765
 python -m triage examples/tickets.json
+python -m triage examples/network-flow.json --format note
 python -m unittest discover -s tests -v
 ```
 
@@ -20,10 +21,14 @@ La UI accetta una lista JSON normalizzata e presenta punteggio, coda operativa, 
 - Separazione ticket attivi, attese, follow-up e stati terminali provvisori.
 - Controllo completezza, assenza assegnatario, inattività umana oltre 7 giorni.
 - Candidati SOC/NOC per parole chiave, ambiguità esplicita; nessuna assegnazione automatica.
-- Domande diagnostiche per pagamenti e segnalazioni di sicurezza.
+- Note schematiche ispirate al triage WinNAT-UI: evidenze, diagnosi, dati mancanti, verifiche e prossimo passo.
+- Procedure tecniche versionate; interventi predefiniti attivati da esiti documentati.
+- Nessun LLM, embedding o servizio AI; keyword usate solo per suggerire candidati.
 - Validazione input, limite batch, test e workflow GitHub Actions.
 
 **Le soglie e i gruppi sono ipotesi dimostrative**, non policy aziendali ricavate dal portale. Il punteggio indica ordine di revisione, non una nuova priorità contrattuale. Le keyword possono comparire in frasi negate: non provano un incidente né autorizzano escalation.
+
+La procedura tecnica va scelta esplicitamente. I fatti e i risultati dei test vengono forniti nel campo `technical`: vedere `examples/network-flow.json`. Il prototipo non comprende automaticamente il testo libero né esegue verifiche di rete.
 
 ## Input
 
@@ -33,6 +38,7 @@ Vedere `examples/tickets.json`. Campi opzionali: `sla_due_at`, `reactivation_at`
 
 - [Rilevazione portale e dizionario dati](docs/PORTAL_DISCOVERY.md)
 - [Architettura, backlog e criteri di accettazione](docs/ARCHITECTURE.md)
-- [Incorporare AI e retrieval](docs/AI_PLAN.md)
+- [Progettazione senza AI](docs/NO_AI_DESIGN.md)
+- [Formato del triage](docs/TRIAGE_FORMAT.md)
 
 Il repository contiene soltanto codice, metadati strutturali e casi sintetici. Non inserirvi esportazioni clienti, indirizzi di gestione, credenziali, cookie o dump HTML.

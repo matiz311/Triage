@@ -1,8 +1,9 @@
 """Advisory rules only; no portal writes or external AI calls."""
 from datetime import datetime, timezone
 import re
+from .report import build_report, validate_technical
 
-VERSION = '0.1.0'
+VERSION = '0.2.0'
 PRIORITIES = {'Alta': 75, 'Media': 45, 'Bassa': 20}
 WAITING = {'Sospeso in Attesa Fornitore', 'Sospeso in Attesa Commerciale', 'Sospeso in Attesa Riscontro Cliente'}
 CLOSED = {'Chiuso', 'Annullato'}  # provisional: must be mapped to tenant catalog
@@ -23,6 +24,7 @@ def validate(ticket):
             raise ValueError(f'{field}: attesa stringa o null')
     if not ticket.get('id'):
         raise ValueError('ID obbligatorio')
+    validate_technical(ticket)
     for field in ('sla_due_at', 'reactivation_at', 'last_human_update_at'):
         if ticket.get(field):
             timestamp(ticket[field])
@@ -44,7 +46,7 @@ def analyze(ticket, now=None):
     if priority not in PRIORITIES:
         flags.append('unmapped_priority')
     if status in CLOSED:
-        return dict(id=ticket['id'], score=0, lane='closed', reasons=['Stato terminale configurato'], questions=questions, flags=flags, rule_version=VERSION)
+        return dict(id=ticket['id'], score=0, lane='closed', reasons=['Stato terminale configurato'], questions=questions, flags=flags, rule_version=VERSION, technical_report=build_report(ticket))
     lane = 'waiting' if status in WAITING else 'actionable'
     due = ticket.get('sla_due_at')
     if due:
@@ -75,7 +77,7 @@ def analyze(ticket, now=None):
         score += 10
         flags.append('stale')
         reasons.append('Oltre 7 giorni di calendario senza aggiornamento umano')
-    text = (ticket.get('subject', '') + '\n' + ticket.get('description', '')).lower()
+    text = ((ticket.get('subject') or '') + '\n' + (ticket.get('description') or '')).lower()
     routes = []
     for name, (group, pattern) in ROUTES.items():
         matches = sorted(set(re.findall(pattern, text)))
@@ -90,12 +92,14 @@ def analyze(ticket, now=None):
         questions.append('Verificare segnalazione di sicurezza con operatore SOC; keyword non prova un incidente')
     return dict(id=ticket['id'], score=min(score, 100), lane=lane, reasons=reasons,
                 questions=questions, flags=flags, routing_candidates=routes,
-                completeness=round((6-len(missing))/6, 2), rule_version=VERSION)
+                completeness=round((6-len(missing))/6, 2), rule_version=VERSION, technical_report=build_report(ticket))
 
 def batch(tickets, now=None):
     if not isinstance(tickets, list) or len(tickets) > 1000:
         raise ValueError('Attesa lista di massimo 1000 ticket')
-    ids = [t.get('id') if isinstance(t, dict) else None for t in tickets]
+    for ticket in tickets:
+        validate(ticket)
+    ids = [t['id'] for t in tickets]
     if len(ids) != len(set(ids)):
         raise ValueError('ID duplicati')
     results = [analyze(t, now) for t in tickets]

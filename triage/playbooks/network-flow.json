@@ -1,0 +1,25 @@
+{
+  "id": "network-flow", "version": "1.0", "title": "Verifica flussi di rete",
+  "patterns": ["\\b(?:pos|pagamenti)\\b", "\\b(?:firewall|vpn|ipsec|palo alto|fortigate|fortinet)\\b"],
+  "fields": {
+    "impact": "Disservizio attuale, utenti/sedi coinvolti e data obiettivo?",
+    "flow_matrix": "Sorgente, destinazione, porte/protocolli e iniziatore per ogni percorso?",
+    "path": "Firewall attraversati, zone, routing e percorso di ritorno?",
+    "test_case": "Caso riproducibile: dispositivo campione, orario con timezone ed esito atteso?"
+  },
+  "checks": [
+    {"id":"deployment","label":"Configurazione applicata ai dispositivi corretti","question":"Verificare esito commit/push e configurazione effettiva.","on_fail":"Confrontare configurazione prevista e applicata; correggere scope/distribuzione della modifica dopo verifica."},
+    {"id":"ingress","label":"Traffico osservato in ingresso","question":"Correlare un test ai log o a una cattura sul punto di ingresso.","on_fail":"Verificare sorgente, percorso a monte e punto di cattura; l'assenza nei soli log non dimostra assenza di pacchetti."},
+    {"id":"policy","label":"Flusso consentito dalla policy prevista","question":"Eseguire policy match e confronto con regola/azione del traffico reale.","on_fail":"Identificare la regola che blocca il flusso e correggere solo le autorizzazioni approvate."},
+    {"id":"nat","label":"Traduzioni NAT coerenti con il flusso atteso","question":"Verificare match NAT e indirizzi effettivi prima/dopo traduzione.","on_fail":"Correggere la traduzione o l'esenzione specifica dopo confronto con il disegno del flusso."},
+    {"id":"return_path","label":"Percorso di ritorno verificato","question":"Verificare route e risposta dal lato destinazione.","on_fail":"Verificare routing di ritorno e apparati intermedi; isolare il tratto che perde la risposta."},
+    {"id":"vpn_selectors","label":"VPN e selettori coprono il flusso","question":"Se attraversa IPsec, verificare SA e traffic selector sui peer; altrimenti indicare non applicabile con motivazione.","on_fail":"Confrontare SA e selettori con il peer; modificare solo gli elementi mancanti dimostrati."},
+    {"id":"application_test","label":"Test applicativo riuscito","question":"Eseguire il test concordato con il referente applicativo.","on_fail":"Raccogliere errore applicativo e sessione correlata; distinguere trasporto, servizio e autenticazione."},
+    {"id":"regression","label":"Servizio preesistente ancora operativo","question":"Ripetere un test del servizio preesistente dopo l'intervento.","on_fail":"Valutare rollback concordato e differenze introdotte prima di estendere il rilascio."}
+  ],
+  "acceptance": "Test applicativo riuscito per ogni percorso dichiarato e regressione del servizio preesistente verificata.",
+  "sources": [
+    "https://docs.paloaltonetworks.com/pan-os/11-1/pan-os-admin/policy/test-policy-rule-traffic-matches",
+    "https://docs.paloaltonetworks.com/network-security/ipsec-vpn/administration/get-started-with-ipsec-vpn-site-to-site/site-to-site-vpn-overview/proxy-id-for-ipsec-vpn"
+  ]
+}
